@@ -1,0 +1,30 @@
+name: Build APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -q soundlab.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build
+        working-directory: soundlab
+        run: |
+          flutter create --org com.soundlab --project-name soundlab --platforms=android .
+          cp -r android_overlay/. android/app/src/main/
+          flutter pub get
+          flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soundlab-apk
+          path: soundlab/build/app/outputs/flutter-apk/app-release.apk
